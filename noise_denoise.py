@@ -12,14 +12,16 @@ def mfilter(data, filter_size):
         for j in range(-indexer, filter_size-indexer)
     ]
     index = len(window) // 2
-    for i in range(len(data)):
-        for j in range(len(data[0])):
-            data[i][j] = heapq.nlargest(index+1,
+    d = data.shape[1]
+    s = data.shape[0]
+    for i in range(data.shape[0]):
+        for j in range(d):
+            data[i,j] = heapq.nsmallest(index+1,
                 (0 if (
                     min(i+a, j+b) < 0
-                    or len(data) <= i+a
-                    or len(data[0]) <= j+b
-                ) else data[i+a][j+b]
+                    or s <= i+a
+                    or d <= j+b
+                ) else data[i+a, j+b]
                 for a, b in window)
             )[index]
     return data
@@ -48,9 +50,9 @@ cv_denoise = cv2.medianBlur(noisy, how_much_blur)
 
 ## manual denoise
 denoise = np.copy(noisy)
-denoise[:,:,0] = mfilter(denoise[:,:,0], 3)
-denoise[:,:,1] = mfilter(denoise[:,:,1], 3)
-denoise[:,:,2] = mfilter(denoise[:,:,2], 3)
+denoise[:,:,0] = mfilter(denoise[:,:,0], how_much_blur)
+denoise[:,:,1] = mfilter(denoise[:,:,1], how_much_blur)
+denoise[:,:,2] = mfilter(denoise[:,:,2], how_much_blur)
 
 cv2.imshow('result', side_by_side(
         Tagged('Median Filter Denoise - AliMPFard', Vertical(
