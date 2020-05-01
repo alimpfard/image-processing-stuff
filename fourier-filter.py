@@ -19,7 +19,7 @@ def render_butterworth_curve(mask, radius):
 
 def render_gaussian_curve(mask, radius):
     sy,sx = mask.shape
-    radius2 = radius ** 2
+    radius2 = 2 * (radius ** 2)
     sx /= 2
     sy /= 2
     y,x = np.ogrid[-sy:sy, -sx:sx]
