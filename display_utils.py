@@ -169,3 +169,11 @@ def _side_by_side(orders, numbers, alignment):
             else:
                 stack = sbs
     return stack
+
+def layout_with_names(elements, layout):
+    return layout(*[Tagged(name, Vertical(Spacer(40), value)) for name,value in elements.items()])
+
+def wait_for_key(key, waitkey, callback):
+    while waitkey() & 0xff != ord(key):
+        pass
+    callback()
