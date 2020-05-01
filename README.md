@@ -8,6 +8,12 @@ converts an image from BGR to Gray
 - `noise_denoise.py`
 Noisifies an image and then applies a median filter to it
 
+- `fourier-transform.py`
+Brings an image to the frequency domain
+
+- `fourier-filters.py`
+Applies multiple FFT-based filters: {gaussian,butterworth,ideal} (high,low)-pass filters
+
 #### Utilities
 
 - `display_utils.py`
@@ -23,5 +29,33 @@ Tagged(TAG, LAYOUT, **options) # adds a caption to a given layout
 
 [*INDEX]              # creates a multi-channel overlay of the mentioned indices
 INDEX                 # copies the image referenced by images[INDEX]
+```
+
+named Matrix-like layouts can be created via `nxn_matrix_view`:
+```py
+view = nxn_matrix_view(range(8), ['foo', 'bar'], 2)
+
+# -> A tagged matrix view
+# Vertical
+#   Tagged(foo)
+#     Vertical
+#       Spacer(40 px)
+#       Vertical
+#         Horizontal
+#           0
+#           1
+#         Horizontal
+#           2
+#           3
+#   Tagged(bar)
+#     Vertical
+#       Spacer(40 px)
+#       Vertical
+#         Horizontal
+#           4
+#           5
+#         Horizontal
+#           6
+#           7
 ```
 
