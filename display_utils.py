@@ -2,12 +2,20 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from itertools import chain, islice
 
+def show(x):
+    if hasattr(x, '__show__'):
+        return x.__show__()
+    return str(x)
+
 class Vertical:
     def __init__(self, *elements):
         self.elements = elements
     
     def __str__(self):
         return 'Vertical\n  ' + "\n  ".join(x.replace('\n  ', '\n    ') for x in map(str, self.elements))
+    
+    def __show__(self):
+        return '\n'.join(map(lambda x: show(x), self.elements))
 
 class Horizontal:
     def __init__(self, *elements):
@@ -15,6 +23,10 @@ class Horizontal:
 
     def __str__(self):
         return 'Horizontal\n  ' + "\n  ".join(x.replace('\n  ', '\n    ') for x in map(str, self.elements))
+    
+    def __show__(self):
+        x = [show(x).split('\n') for x in self.elements]
+        return '\n'.join('|'.join(x) for x in zip(*x))
 
 class Tagged:
     def __init__(self, tag, number, origin=(0,0), fill='rgb(255,0,0)', font='/usr/share/fonts/TTF/Hack-Regular-Nerd-Font-Complete.ttf', fontsize=32):
@@ -26,6 +38,9 @@ class Tagged:
     
     def __str__(self):
         return 'Tagged({})\n  '.format(self.tag) + str(self.number).replace('\n  ', '\n    ')
+    
+    def __show__(self):
+        return f'[{self.tag}]{show(self.number)}'
 
 class Spacer:
     def __init__(self, space=3, value=255):
@@ -34,6 +49,9 @@ class Spacer:
     
     def __str__(self):
         return f'Spacer({self.space} px)'
+    
+    def __show__(self):
+        return f' '
 
 def mkslice(cs, x):
     xs = [slice(None)] * cs
@@ -206,3 +224,8 @@ def wait_for_key(key, waitkey, callback):
     while waitkey() & 0xff != ord(key):
         pass
     callback()
+
+def empty(shape, value = 255):
+    img = np.zeros(shape, np.uint8)
+    img[mkselect(shape, 0)[:-1]] = value
+    return img
