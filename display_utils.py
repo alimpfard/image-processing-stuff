@@ -1,13 +1,20 @@
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
+from itertools import chain, islice
 
 class Vertical:
     def __init__(self, *elements):
         self.elements = elements
+    
+    def __str__(self):
+        return 'Vertical\n  ' + "\n  ".join(x.replace('\n  ', '\n    ') for x in map(str, self.elements))
 
 class Horizontal:
     def __init__(self, *elements):
         self.elements = elements
+
+    def __str__(self):
+        return 'Horizontal\n  ' + "\n  ".join(x.replace('\n  ', '\n    ') for x in map(str, self.elements))
 
 class Tagged:
     def __init__(self, tag, number, origin=(0,0), fill='rgb(255,0,0)', font='/usr/share/fonts/TTF/Hack-Regular-Nerd-Font-Complete.ttf', fontsize=32):
@@ -16,11 +23,17 @@ class Tagged:
         self.origin = origin
         self.fill = fill
         self.font = ImageFont.truetype(font, fontsize)
+    
+    def __str__(self):
+        return 'Tagged({})\n  '.format(self.tag) + str(self.number).replace('\n  ', '\n    ')
 
 class Spacer:
     def __init__(self, space=3, value=255):
         self.space = space
         self.value = value
+    
+    def __str__(self):
+        return f'Spacer({self.space} px)'
 
 def mkslice(cs, x):
     xs = [slice(None)] * cs
@@ -172,6 +185,22 @@ def _side_by_side(orders, numbers, alignment):
 
 def layout_with_names(elements, layout):
     return layout(*[Tagged(name, Vertical(Spacer(40), value)) for name,value in elements.items()])
+
+def chunks(iterable, size):
+    iterator = iter(iterable)
+    for first in iterator:
+        yield chain([first], islice(iterator, size - 1))
+
+def nxn_matrix_view(indices, names, n):
+    size = n * n
+    layouts = []
+    for view in chunks(indices, size):
+        v_list = []
+        for layout in map(list, chunks(view, n)):
+            v_list.append(Horizontal(*layout))
+        layouts.append(Vertical(*v_list))
+
+    return layout_with_names({ name:layout for name, layout in zip(names, layouts) }, Vertical)
 
 def wait_for_key(key, waitkey, callback):
     while waitkey() & 0xff != ord(key):
