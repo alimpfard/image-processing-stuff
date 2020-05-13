@@ -14,6 +14,12 @@ Brings an image to the frequency domain
 - `fourier-filters.py`
 Applies multiple FFT-based filters: {gaussian,butterworth,ideal} (high,low)-pass filters
 
+- `homomorphic-filter.py`
+Applies some homomorphic filters
+
+- `spatial-transforms.py`
+Applies multiple spatial transformations (Negative, Log, Exp, Power)
+
 #### Utilities
 
 - `display_utils.py`
@@ -31,9 +37,9 @@ Tagged(TAG, LAYOUT, **options) # adds a caption to a given layout
 INDEX                 # copies the image referenced by images[INDEX]
 ```
 
-named Matrix-like layouts can be created via `nxn_matrix_view`:
+named Matrix-like layouts can be created via `nxm_matrix_view`:
 ```py
-view = nxn_matrix_view(range(8), ['foo', 'bar'], 2)
+view = nxm_matrix_view(range(8), ['foo', 'bar'], 2, 2)
 
 # -> A tagged matrix view
 # Vertical
