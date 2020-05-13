@@ -10,10 +10,10 @@ def show(x):
 class Vertical:
     def __init__(self, *elements):
         self.elements = elements
-    
+
     def __str__(self):
         return 'Vertical\n  ' + "\n  ".join(x.replace('\n  ', '\n    ') for x in map(str, self.elements))
-    
+
     def __show__(self):
         return '\n'.join(map(lambda x: show(x), self.elements))
 
@@ -23,7 +23,7 @@ class Horizontal:
 
     def __str__(self):
         return 'Horizontal\n  ' + "\n  ".join(x.replace('\n  ', '\n    ') for x in map(str, self.elements))
-    
+
     def __show__(self):
         x = [show(x).split('\n') for x in self.elements]
         return '\n'.join('|'.join(x) for x in zip(*x))
@@ -35,10 +35,10 @@ class Tagged:
         self.origin = origin
         self.fill = fill
         self.font = ImageFont.truetype(font, fontsize)
-    
+
     def __str__(self):
         return 'Tagged({})\n  '.format(self.tag) + str(self.number).replace('\n  ', '\n    ')
-    
+
     def __show__(self):
         return f'[{self.tag}]{show(self.number)}'
 
@@ -46,10 +46,10 @@ class Spacer:
     def __init__(self, space=3, value=255):
         self.space = space
         self.value = value
-    
+
     def __str__(self):
         return f'Spacer({self.space} px)'
-    
+
     def __show__(self):
         return f' '
 
@@ -209,16 +209,18 @@ def chunks(iterable, size):
     for first in iterator:
         yield chain([first], islice(iterator, size - 1))
 
-def nxn_matrix_view(indices, names, n):
-    size = n * n
+def nxm_matrix_view(indices, names, n, m):
+    size = n * m
     layouts = []
     for view in chunks(indices, size):
         v_list = []
-        for layout in map(list, chunks(view, n)):
+        for layout in map(list, chunks(view, m)):
             v_list.append(Horizontal(*layout))
         layouts.append(Vertical(*v_list))
-
     return layout_with_names({ name:layout for name, layout in zip(names, layouts) }, Vertical)
+
+def nxn_matrix_view(indices, names, n):
+    return nxm_matrix_view(indices, names, n, n)
 
 def wait_for_key(key, waitkey, callback):
     while waitkey() & 0xff != ord(key):
