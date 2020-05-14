@@ -231,3 +231,9 @@ def empty(shape, value = 255):
     img = np.zeros(shape, np.uint8)
     img[mkselect(shape, 0)[:-1]] = value
     return img
+
+def render_function(fn, shape):
+    image = Image.fromarray(empty(shape))
+    draw = ImageDraw.Draw(image)
+    draw.line([(x, shape[1] - fn(x)) for x in range(0, shape[0])], fill=0, width=1, joint='curve')
+    return np.array(image).astype(np.uint8)
