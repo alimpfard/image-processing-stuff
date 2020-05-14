@@ -20,6 +20,9 @@ Applies some homomorphic filters
 - `spatial-transforms.py`
 Applies multiple spatial transformations (Negative, Log, Exp, Power)
 
+- `intensity-transforms.py`
+Applies multiple spatial intensity transforms (pw-linear, bit-plane slicing)
+
 #### Utilities
 
 - `display_utils.py`
