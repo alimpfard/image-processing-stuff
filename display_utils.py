@@ -7,6 +7,11 @@ def show(x):
         return x.__show__()
     return str(x)
 
+def transpose(x):
+    if hasattr(x, 'transpose'):
+        return x.transpose()
+    return x
+
 class Vertical:
     def __init__(self, *elements):
         self.elements = elements
@@ -16,6 +21,9 @@ class Vertical:
 
     def __show__(self):
         return '\n'.join(map(lambda x: show(x), self.elements))
+
+    def transpose(self):
+        return Horizontal(*map(transpose, self.elements))
 
 class Horizontal:
     def __init__(self, *elements):
@@ -28,19 +36,28 @@ class Horizontal:
         x = [show(x).split('\n') for x in self.elements]
         return '\n'.join('|'.join(x) for x in zip(*x))
 
+    def transpose(self):
+        return Vertical(*map(transpose, self.elements))
+
 class Tagged:
     def __init__(self, tag, number, origin=(0,0), fill='rgb(255,0,0)', font='/usr/share/fonts/TTF/Hack-Regular-Nerd-Font-Complete.ttf', fontsize=32):
         self.tag = tag
         self.number = number
         self.origin = origin
         self.fill = fill
+        self.fontname = font
+        self.fontsize = fontsize
         self.font = ImageFont.truetype(font, fontsize)
+        self.spacer = Spacer(fontsize + 8) # FIXME: resize to font EM size
 
     def __str__(self):
         return 'Tagged({})\n  '.format(self.tag) + str(self.number).replace('\n  ', '\n    ')
 
     def __show__(self):
         return f'[{self.tag}]{show(self.number)}'
+
+    def transpose(self):
+        return Tagged(self.tag, transpose(self.number), self.origin, self.fill, self.fontname, self.fontsize)
 
 class Spacer:
     def __init__(self, space=3, value=255):
@@ -52,6 +69,23 @@ class Spacer:
 
     def __show__(self):
         return f' '
+
+class Histogram:
+    def __init__(self, ref, normalised=False, margin_x=30, margin_y=30, bins=20):
+        self.ref = ref
+        self.normalised = normalised
+        self.margin_x = margin_x
+        self.margin_y = margin_y
+        self.bins = bins
+
+    def __str__(self):
+        return f'Histogram({self.ref}:{self.bins})'
+
+    def __show__(self):
+        return f'H[{self.ref}:{self.bins}]'
+
+    def transpose(self):
+        return Histogram(transpose(self.ref), self.normalised, self.margin_x, self.margin_y, self.bins)
 
 def mkslice(cs, x):
     xs = [slice(None)] * cs
@@ -123,7 +157,41 @@ def side_by_side(order, *numbers):
 def _side_by_side(orders, numbers, alignment):
     stack = None
     for order in orders:
-        if isinstance(order, Vertical):
+        if isinstance(order, Histogram):
+            sbs = _side_by_side([order.ref], numbers, alignment)
+            hists = []
+            if len(sbs.shape) > 1:
+                for i in range(sbs.shape[-1]):
+                    source = sbs[mkslice(len(sbs.shape), i)]
+                    hist = np.histogram(source, bins=order.bins, range=(0,255))[0]
+                    hists.append(hist / source.size)
+            else:
+                hists.append(np.histogram(sbs, bins=order.bins, range=(0, 255))[0] / sbs.size)
+
+            height, width = [*sbs.shape, 0, 1][:2]
+            image = Image.new('RGB', (width, height), (255,255,255))
+            draw = ImageDraw.Draw(image)
+            size_w = (width - 2 * order.margin_x) // len(hists) // order.bins
+            size_h = (height - 2 * order.margin_y)
+            colors = ['red', 'green', 'blue']
+            for i,hist in enumerate(hists):
+                start_x = order.margin_x + i * size_w
+                start_y = height - order.margin_y
+                for g,el in enumerate(hist):
+                    next_step = start_x + size_w
+                    points = ((start_x, start_y), (next_step, start_y - size_h * el))
+                    draw.rectangle(points, fill=colors[i%3], width=0)
+                    start_x = next_step + ((len(hists) - 1) * size_w)
+            sbs = np.array(image)
+            if stack is not None:
+                stack, sbs = coerce_resize(stack, sbs, alignment)
+                if alignment == 1:
+                    stack = np.vstack((stack, sbs))
+                else:
+                    stack = np.hstack((stack, sbs))
+            else:
+                stack = sbs
+        elif isinstance(order, Vertical):
             sbs = _side_by_side(order.elements, numbers, 1)
             if stack is not None:
                 stack, sbs = coerce_resize(stack, sbs, alignment)
@@ -176,7 +244,7 @@ def _side_by_side(orders, numbers, alignment):
             else:
                 stack = sbs
         elif isinstance(order, Tagged):
-            sbs = _side_by_side([order.number], numbers, alignment)
+            sbs = _side_by_side([order.spacer, order.number], numbers, not alignment)
             image = Image.fromarray(sbs)
             draw = ImageDraw.Draw(image)
             draw.text(order.origin, order.tag, fill=order.fill, font=order.font)
@@ -202,7 +270,7 @@ def _side_by_side(orders, numbers, alignment):
     return stack
 
 def layout_with_names(elements, layout):
-    return layout(*[Tagged(name, Vertical(Spacer(40), value)) for name,value in elements.items()])
+    return layout(*[Tagged(name, value) for name,value in elements.items()])
 
 def chunks(iterable, size):
     iterator = iter(iterable)
@@ -213,10 +281,8 @@ def nxm_matrix_view(indices, names, n, m):
     size = n * m
     layouts = []
     for view in chunks(indices, size):
-        v_list = []
         for layout in map(list, chunks(view, m)):
-            v_list.append(Horizontal(*layout))
-        layouts.append(Vertical(*v_list))
+            layouts.append(Horizontal(*layout))
     return layout_with_names({ name:layout for name, layout in zip(names, layouts) }, Vertical)
 
 def nxn_matrix_view(indices, names, n):

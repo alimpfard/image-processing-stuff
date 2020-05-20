@@ -23,6 +23,12 @@ Applies multiple spatial transformations (Negative, Log, Exp, Power)
 - `intensity-transforms.py`
 Applies multiple spatial intensity transforms (pw-linear, bit-plane slicing)
 
+- `histogram.py`
+Renders a histogram of the provided image (actual source in `display_utils.py` in `Histogram`)
+
+- `image-averaging.py`
+Attempts to remove gaussian noise from image by averaging multiple noisy images
+
 #### Utilities
 
 - `display_utils.py`
