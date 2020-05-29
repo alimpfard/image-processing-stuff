@@ -101,6 +101,7 @@ def mkselect(shape, x):
     return tuple(xs)
 
 def extend_to_shape(a, shape, v):
+    print('extend', a.shape, '->', shape, '::', v)
     shape = list(shape)
     for i in range(len(shape)):
         if i >= len(a.shape):
@@ -118,6 +119,7 @@ def extend_to_shape(a, shape, v):
 
 
 def coerce_resize(a, b, v):
+    print('coerce-resize', a.shape, '->', b.shape, '::', v)
     if len(a.shape) > len(b.shape):
         return coerce_resize(a, extend_to_shape(b, a.shape, v), v)
 
@@ -153,6 +155,11 @@ def coerce_resize(a, b, v):
 
 def side_by_side(order, *numbers):
     return _side_by_side([order], numbers, 1)
+
+def align(thing1, thing2, alignment):
+    if alignment:
+        return Vertical(thing1, thing2)
+    return Horizontal(thing1, thing2)
 
 def _side_by_side(orders, numbers, alignment):
     stack = None
@@ -236,7 +243,7 @@ def _side_by_side(orders, numbers, alignment):
                 sbs[xslice] = numbers[i]
 
             if stack is not None:
-                stack, sbs = coerce_resize(stack, sbs, 1)
+                stack, sbs = coerce_resize(stack, sbs, alignment)
                 if alignment == 1:
                     stack = np.vstack((stack, sbs))
                 else:
@@ -244,7 +251,7 @@ def _side_by_side(orders, numbers, alignment):
             else:
                 stack = sbs
         elif isinstance(order, Tagged):
-            sbs = _side_by_side([order.spacer, order.number], numbers, not alignment)
+            sbs = _side_by_side([align(order.spacer, order.number, alignment)], numbers, 1)
             image = Image.fromarray(sbs)
             draw = ImageDraw.Draw(image)
             draw.text(order.origin, order.tag, fill=order.fill, font=order.font)
@@ -260,7 +267,7 @@ def _side_by_side(orders, numbers, alignment):
         else:
             sbs = numbers[order]
             if stack is not None:
-                stack, sbs = coerce_resize(stack, sbs, 0)
+                stack, sbs = coerce_resize(stack, sbs, alignment)
                 if alignment == 1:
                     stack = np.vstack((stack, sbs))
                 else:
