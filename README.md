@@ -29,6 +29,12 @@ Renders a histogram of the provided image (actual source in `display_utils.py` i
 - `image-averaging.py`
 Attempts to remove gaussian noise from image by averaging multiple noisy images
 
+- `laplacian.py`
+Does some laplacian stuff (Image sharpening)
+
+- `spatial-filters.py`
+Collections of all implemented spatial filters (WIP as of yet)
+
 #### Utilities
 
 - `display_utils.py`
