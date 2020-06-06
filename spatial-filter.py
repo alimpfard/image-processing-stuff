@@ -42,12 +42,20 @@ img = (img.sum(axis=2)/3).astype(np.uint8)
 other_img = cv2.imread(sys.argv[2] if len(sys.argv) > 2 else 'skelly.png')
 other_img = (other_img.sum(axis=2)/3).astype(np.uint8)
 
+def nth_power(img,n):
+    m = np.max(img)
+    filtered = np.power(img / m, n)
+    return np.uint8(scale(filtered))
+
 def apply_kernel(kern,to=img):
     res = convolve2d(to, kern, mode='same')
     return res
 
-def average(kernel=KERNEL_SIZE, img=img):
-    return scale(apply_kernel(kernels['average'](kernel), img))
+def exaverage(kernel=KERNEL_SIZE, img=img):
+    return apply_kernel(kernels['average'](kernel), img)/kernel
+
+def average(*args):
+    return scale(exaverage(*args))
 
 def minf():
     return minimum_filter(img, size=KERNEL_SIZE, mode='nearest')
@@ -61,23 +69,27 @@ def highpass(idt):
 def emboss(direction):
     return scale(apply_kernel(kernels[f'emboss-{direction}']))
 
-def laplacian(idt,img=img):
-    return scale(apply_kernel(kernels[f'laplacian-{idt}'], img))
+def exlaplacian(idt,img=img):
+    return np.abs(apply_kernel(kernels[f'laplacian-{idt}'], img))
+
+def laplacian(*args):
+    return scale(exlaplacian(*args))
 
 def laplacian_sharp(idt, img=img):
-    return np.clip(apply_kernel(kernels[f'laplacian_sharpen-{idt}'], img), 0, 255).astype(np.uint8)
+    return clip(apply_kernel(kernels[f'laplacian_sharpen-{idt}'], img))
 
-def sobel(img=img):
-    return scale(
-            apply_kernel(kernels['sobel-xr'],
-                apply_kernel(kernels['sobel-yu'],
-                    apply_kernel(kernels['sobel-xl'],
-                        apply_kernel(kernels['sobel-yd'], img)))))
+def exsobel(img=img):
+    dx = apply_kernel(kernels['sobel-xr'], img)
+    dy = apply_kernel(kernels['sobel-yu'], img)
+    return np.abs(dx) + np.abs(dy)
+
+def sobel(*args):
+    return scale(exsobel(*args))
 
 def roberts():
     return scale(
-            apply_kernel(kernels['roberts-x'],
-                apply_kernel(kernels['roberts-y'])))
+            np.abs(apply_kernel(kernels['roberts-x'])) +
+            np.abs(apply_kernel(kernels['roberts-y'])))
 
 
 def clip(thing):
@@ -90,9 +102,7 @@ def scale(thing):
     thing *= 255
     return thing.astype(np.uint8)
 
-
-img2 = side_by_side(
-    Vertical(
+layout = Vertical(
         Tagged('Original', 0),
         Tagged('Averaged (3x3 kernel)', 1),
         Tagged('Max (3x3 window)', 2),
@@ -189,7 +199,19 @@ img2 = side_by_side(
                 )
             )
         )
-    ),
+    )
+
+a = other_img
+b = exlaplacian(0, a)
+c = a + b
+d = exsobel(a)
+e = exaverage(5, d)
+f = scale(np.abs(c * e))
+g = clip(a.astype(np.float) + f)
+h = nth_power(g, 0.5)
+
+img2 = side_by_side(
+    layout,
     img, average(), minf(), maxf(), highpass(0),
     emboss('e'), emboss('nw'), emboss('s'), emboss('se'),
     emboss('n'), emboss('ne'), emboss('w'), emboss('sw'),
@@ -199,8 +221,7 @@ img2 = side_by_side(
     laplacian_sharp('sharpen'), laplacian_sharp('unsharpen'),
     sobel(), roberts(),
     # Skelly
-    (a:=other_img), laplacian(0, other_img), (c:=laplacian_sharp('sharpen', other_img)),
-    (d:=sobel(other_img)), (e:=average(5, d)), (f:=scale(c * e)), (g:=clip(a+f)), clip(g)
+    a,scale(b),clip(c),clip(d),scale(e),f,g,scale(h)
 )
 
 cv2.imshow('Out', img2)
