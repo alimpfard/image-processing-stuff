@@ -34,6 +34,7 @@ kernels = {
     'sobel-yd': np.array([-1,-2,-1,0,0,0,1,2,1]).reshape((3,3)),
     'roberts-x':np.array([0,0,0,0,1,0,0,0,-1]).reshape((3,3)),
     'roberts-y':np.array([0,0,0,1,0,0,0,-1,0]).reshape((3,3)),
+    'gaussian': np.array([1,4,7,4,1,4,16,26,16,4,7,26,41,26,7,4,16,26,16,4,1,4,7,4,1]).reshape((5,5)),
 }
 
 img = cv2.imread(sys.argv[1] if len(sys.argv) > 1 else 'test.png')
@@ -62,6 +63,9 @@ def minf():
 
 def maxf():
     return maximum_filter(img, size=KERNEL_SIZE, mode='nearest')
+
+def gaussian():
+    return scale(apply_kernel(kernels['gaussian']).astype(np.float) / 273)
 
 def highpass(idt):
     return scale(apply_kernel(kernels[f'highpass-{idt}']))
@@ -108,6 +112,7 @@ layout = Vertical(
         Tagged('Max (3x3 window)', 2),
         Tagged('Min (3x3 window)', 3),
         Tagged('"HighPass"', 4),
+        Tagged('Gaussian', 33),
         Tagged('Embossed',
             Vertical(
                 Horizontal(
@@ -221,7 +226,9 @@ img2 = side_by_side(
     laplacian_sharp('sharpen'), laplacian_sharp('unsharpen'),
     sobel(), roberts(),
     # Skelly
-    a,scale(b),clip(c),clip(d),scale(e),f,g,scale(h)
+    a,scale(b),clip(c),clip(d),scale(e),f,g,scale(h),
+    # gauss
+    gaussian()
 )
 
 cv2.imshow('Out', img2)
