@@ -38,6 +38,9 @@ Collections of all implemented spatial filters (WIP as of yet)
 - `erosion-dilation.py`
 Applies morphological operators "erode", "dilate" and their mixups "opening mode" and "closing mode"
 
+- `ssim.py`
+Implements SSIM
+
 #### Utilities
 
 - `display_utils.py`
