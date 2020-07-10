@@ -1,11 +1,11 @@
-import cv2
 import sys
 from display_utils import *
 from time import time
 
+Backend.PIL()
 
-img0 = cv2.imread(sys.argv[1] if len(sys.argv) > 1 else 'test.png')
-img1 = cv2.imread(sys.argv[2] if len(sys.argv) > 2 else 'test.png')
+img0 = read(sys.argv[1] if len(sys.argv) > 1 else 'test.png')
+img1 = read(sys.argv[2] if len(sys.argv) > 2 else 'test.png')
 
 def count(arr):
     return np.prod(arr.shape)
@@ -79,6 +79,5 @@ img2 = side_by_side(
         ),
         img0, img1
 )
-cv2.imshow('Out', img2)
+show(img2, persist=True)
 
-wait_for_key('q', lambda: cv2.waitKey(0), cv2.destroyAllWindows)

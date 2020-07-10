@@ -310,3 +310,48 @@ def render_function(fn, shape):
     draw = ImageDraw.Draw(image)
     draw.line([(x, shape[1] - fn(x)) for x in range(0, shape[0])], fill=0, width=1, joint='curve')
     return np.array(image).astype(np.uint8)
+
+backend = None
+class Backend:
+    class OpenCV:
+        def __init__(self):
+            global backend
+            backend = self
+            import cv2
+            self.cv2 = cv2
+
+        def read(self, path):
+            return self.cv2.imread(path)
+
+        def show(self, img, persist=False):
+            self.cv2.imshow(img)
+            if persist:
+                wait_for_key('q',
+                        lambda: self.cv2.waitKey(0),
+                        self.cv2.destroyAllWindows)
+
+
+    class PIL:
+        def __init__(self):
+            global backend
+            backend = self
+            import PIL
+            import PIL.Image
+            self.PIL = PIL
+
+        def read(self, path):
+            return np.array(self.PIL.Image.open(path))
+
+        def show(self, img, /, persist=False):
+            image = self.PIL.Image.fromarray(img)
+            image.show()
+
+def read(path):
+    if not backend:
+        raise Exception("No backend")
+    return backend.read(path)
+
+def show(img, /, persist=False):
+    if not backend:
+        raise Exception("No backend")
+    return backend.show(img, persist=persist)
