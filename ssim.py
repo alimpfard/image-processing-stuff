@@ -3,6 +3,9 @@ from time import time
 
 from display_utils import *
 
+# Grab an implementation of PSNR to compare with.
+from psnr import PSNR
+
 # Initialise a new PIL based display tool from display_utils
 Backend.PIL()
 
@@ -122,13 +125,18 @@ def mssim(img0, img1, alpha = 1, beta = 1, gamma = 1):
 # Run the function to get MSSIM of the two images
 app = mssim(img0, img1)
 
+# Calculate the PSNR of the two images - this is to compare with SSIM
+psnr = PSNR(img0, img1)
+
 # Put them togheter to show the result
 img2 = side_by_side(
         Vertical(
             Tagged(f'SSIM = {app}',
-                Horizontal(
-                    Vertical(Tagged('Img0', 0)),
-                    Vertical(Tagged('Img1', 1)),
+                Tagged(f'PSNR = {psnr}',
+                    Horizontal(
+                        Vertical(Tagged('Img0', 0)),
+                        Vertical(Tagged('Img1', 1)),
+                    )
                 )
             )
         ),
@@ -136,3 +144,4 @@ img2 = side_by_side(
 )
 
 show(img2, persist=True)
+
