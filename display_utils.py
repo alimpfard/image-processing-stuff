@@ -330,6 +330,9 @@ class Backend:
                         lambda: self.cv2.waitKey(0),
                         self.cv2.destroyAllWindows)
 
+        def save(self, img, path):
+            self.cv2.imwrite(path, img)
+
 
     class PIL:
         def __init__(self):
@@ -346,6 +349,10 @@ class Backend:
             image = self.PIL.Image.fromarray(img)
             image.show()
 
+        def save(self, img, path):
+            image = self.PIL.Image.fromarray(img)
+            image.save(path)
+
 def read(path):
     if not backend:
         raise Exception("No backend")
@@ -355,3 +362,8 @@ def show(img, /, persist=False):
     if not backend:
         raise Exception("No backend")
     return backend.show(img, persist=persist)
+
+def save(img, path):
+    if not backend:
+        raise Exception("No backend")
+    return backend.save(img, path)
